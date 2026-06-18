@@ -7,38 +7,99 @@ builder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=Assignment1DB;Trus
 
 using var context = new AppDbContext(builder.Options);
 
-// Step 3: Add 3 BlogTypes first (required for Blogs)
-var blogType = new BlogType { Status = "Active", Name = "Personal", Description = "Personal blog" };
-context.BlogTypes.Add(blogType);
+// Run all CRUD tests
+TestDatabase();
 
-// Add 3 PostTypes (required for Posts)
-var postType = new PostType { Status = "Active", Name = "Article", Description = "Article post" };
-context.PostTypes.Add(postType);
-
-context.SaveChanges();
-
-// Step 3: Add 3 Users
-var user1 = new User { Name = "Alice Smith", EmailAddress = "alice@email.com", PhoneNumber = "780-111-2222" };
-var user2 = new User { Name = "Bob Jones", EmailAddress = "bob@email.com", PhoneNumber = "780-333-4444" };
-var user3 = new User { Name = "Carol White", EmailAddress = "carol@email.com", PhoneNumber = "780-555-6666" };
-context.Users.AddRange(user1, user2, user3);
-context.SaveChanges();
-
-// Add a Blog first
-var blog = new Blog { Url = "https://myblog.com", IsPublic = true, BlogTypeId = blogType.BlogTypeId };
-context.Blogs.Add(blog);
-context.SaveChanges();
-
-// Step 4: Add a new Post linked to a User
-var post = new Post
+// =====================
+// TEST DATABASE METHOD
+// =====================
+void TestDatabase()
 {
-    Title = "My First Post",
-    Content = "This is my first post content.",
-    BlogId = blog.BlogId,
-    PostTypeId = postType.PostTypeId,
-    UserId = user1.UserId
-};
-context.Posts.Add(post);
-context.SaveChanges();
+    Console.WriteLine("========== TEST DATABASE ==========\n");
 
-Console.WriteLine("✅ Done! 3 users and 1 post added successfully!");
+    // 1. List all users first
+    ListAllUsers();
+
+    // 2. Add a new user
+    AddUser("David Brown", "david@email.com", "780-777-8888");
+    ListAllUsers();
+
+    // 3. Update a user
+    UpdateUser(1, "Alice Updated", "aliceupdated@email.com", "780-111-9999");
+    ListAllUsers();
+
+    // 4. Delete a user
+    DeleteUser(4);
+    ListAllUsers();
+}
+
+// =====================
+// 1. LIST ALL USERS
+// =====================
+void ListAllUsers()
+{
+    Console.WriteLine("--- All Users ---");
+    var users = context.Users.ToList();
+    foreach (var user in users)
+    {
+        Console.WriteLine($"ID: {user.UserId} | Name: {user.Name} | Email: {user.EmailAddress} | Phone: {user.PhoneNumber}");
+    }
+    Console.WriteLine();
+}
+
+// =====================
+// 2. ADD A NEW USER
+// =====================
+void AddUser(string name, string email, string phone)
+{
+    Console.WriteLine($"Adding user: {name}");
+    var newUser = new User
+    {
+        Name = name,
+        EmailAddress = email,
+        PhoneNumber = phone
+    };
+    context.Users.Add(newUser);
+    context.SaveChanges();
+    Console.WriteLine("User added!\n");
+}
+
+// =====================
+// 3. UPDATE A USER
+// =====================
+void UpdateUser(int userId, string newName, string newEmail, string newPhone)
+{
+    Console.WriteLine($"Updating user ID: {userId}");
+    var user = context.Users.Find(userId);
+    if (user != null)
+    {
+        user.Name = newName;
+        user.EmailAddress = newEmail;
+        user.PhoneNumber = newPhone;
+        context.SaveChanges();
+        Console.WriteLine("User updated!\n");
+    }
+    else
+    {
+        Console.WriteLine("User not found!\n");
+    }
+}
+
+// =====================
+// 4. DELETE A USER
+// =====================
+void DeleteUser(int userId)
+{
+    Console.WriteLine($"Deleting user ID: {userId}");
+    var user = context.Users.Find(userId);
+    if (user != null)
+    {
+        context.Users.Remove(user);
+        context.SaveChanges();
+        Console.WriteLine("User deleted!\n");
+    }
+    else
+    {
+        Console.WriteLine("User not found!\n");
+    }
+}
